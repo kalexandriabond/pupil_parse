@@ -1,4 +1,4 @@
-from pupil_parse import raw_data_path, intermediate_data_path
+from ../../pupil_parse import raw_data_path, intermediate_data_path
 
 
 import pandas as pd
