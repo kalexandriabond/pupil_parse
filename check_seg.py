@@ -13,11 +13,13 @@ def main():
     (unique_subjects, unique_sessions, unique_reward_codes) = md.extract_subjects_sessions(raw_data_path,
      reward_task=1)
 
+    n_trials = 398
+    sample_window = 4000
 
     for subj_id in unique_subjects:
         for session_n in unique_sessions:
 
-            print('checking preprocessing for subject {}'.format(subj_id) +
+            print('checking segmentation for subject {}'.format(subj_id) +
             ' session {}'.format(session_n))
 
             time.sleep(1)
@@ -28,29 +30,18 @@ def main():
 
 
             reward_samples = ep.read_hdf5('samples', subj_id, session_n,
-            intermediate_data_path, reward_code=reward_code)
+            intermediate_data_path, reward_code=reward_code, id_str='seg')
+            print('n samples for segmentation', len(reward_samples))
+            assert len(reward_samples) == (n_trials * sample_window), 'check samples'
             print('samples')
             reward_messages = ep.read_hdf5('messages', subj_id, session_n,
-            intermediate_data_path, reward_code=reward_code)
+            intermediate_data_path, reward_code=reward_code, id_str='seg')
             print('messages')
             reward_events = ep.read_hdf5('events', subj_id, session_n,
-            intermediate_data_path, reward_code=reward_code)
+            intermediate_data_path, reward_code=reward_code, id_str='seg')
             print('events')
 
             time.sleep(1)
-
-            # lum_samples = ep.read_hdf5('samples', subj_id, session_n,
-            # intermediate_data_path, reward_code=None)
-            # print('lum samples')
-            # lum_messages = ep.read_hdf5('messages', subj_id, session_n,
-            # intermediate_data_path, reward_code=None)
-            # print('lum messages')
-            # lum_events = ep.read_hdf5('events', subj_id, session_n,
-            # intermediate_data_path, reward_code=None)
-            # print('lum events')
-            #
-            # time.sleep(1)
-
 
 
 

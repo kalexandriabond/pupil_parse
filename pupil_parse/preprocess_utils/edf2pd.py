@@ -52,7 +52,8 @@ def read_edf(subj_data_file_raw):
 def clean_df(samples, events, messages, lum_task=0, reward_task=0):
     """Clean the pd.DataFrames."""
 
-    samples = samples[['time', 'px_left', 'py_left', 'pa_left']]
+    samples = samples[['time', 'gx_left', 'gy_left', 'pa_left',
+    'gxvel_left', 'gyvel_left']]
     events = events[['trial','blink', 'eye', 'end', 'start']]
 
     if lum_task:
@@ -64,7 +65,8 @@ def clean_df(samples, events, messages, lum_task=0, reward_task=0):
         'stim_offset_time', 'trialid_time']]
 
     samples=samples.rename(columns={"time": "raw_time", "pa_left": "pupil_diameter",
-    "px_left": "pupil_x", "py_left": "pupil_y"},
+    "gx_left": "gaze_x", "gy_left": "gaze_y",
+     "gxvel_left": "gaze_vel_x", "gyvel_left": "gaze_vel_y"},
     errors='raise')
 
     events=events.rename(columns={"end": "raw_end_time", "start": "raw_start_time"},
@@ -117,7 +119,7 @@ def define_relative_time(samples, events, messages):
 
 def save_hdf5(samples, events, messages,
 subj_id, session_n, intermediate_data_path,
-reward_code=None):
+reward_code=None, id_str=None):
     """Save the samples, events, and messages pd.DataFrames within an HDF5 file
     for quick storage and loading."""
 
@@ -130,6 +132,9 @@ reward_code=None):
     str(subj_id) + '_ses-' + str(session_n) + '_task-' +
     task_str)
 
+    if id_str:
+        file_id = os.path.join(file_id + '_' + id_str)
+
     hdf = os.path.join(file_id + '_pupil.h5')
 
     samples.to_hdf(hdf, key='samples')
@@ -141,7 +146,7 @@ reward_code=None):
 
 
 def read_hdf5(data_key, subj_id, session_n,
-intermediate_data_path, reward_code=None):
+intermediate_data_path, reward_code=None, id_str=None):
     """Test hdf5 conversion and read hdf5 files."""
 
     if reward_code:
@@ -152,6 +157,9 @@ intermediate_data_path, reward_code=None):
     file_id = os.path.join(intermediate_data_path + 'sub-' +
     str(subj_id) + '_ses-' + str(session_n) + '_task-' +
     task_str)
+
+    if id_str:
+        file_id = os.path.join(file_id + '_' + id_str)
 
     hdf = os.path.join(file_id + '_pupil.h5')
 

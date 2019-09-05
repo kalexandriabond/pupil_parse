@@ -1,8 +1,10 @@
 import os
 from jupyterthemes import jtplot
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
-def plot_config(theme='onedork', context='poster', fscale=1.4,
+def plot_config(theme='grade3', context='poster', fscale=1.4,
 spines=False, gridlines='--'):
     """Configure plots."""
 
