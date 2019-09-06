@@ -10,16 +10,12 @@ from pupil_parse.analysis_utils import summarize_amplitude as amp
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 import os
-
-plt.rcParams['pdf.fonttype'] = 42
-plt.rcParams['font.family'] = 'DejaVu Sans'
 
 def main():
 
     (raw_data_path, intermediate_data_path,
-    processed_data_path, figure_path) = cf.path_config()
+    processed_data_path, figure_path, _) = cf.path_config()
 
 
     (unique_subjects, unique_sessions, unique_reward_codes) = md.extract_subjects_sessions(raw_data_path,
@@ -47,20 +43,12 @@ def main():
                 print('This session has no data.')
                 continue
 
-            peaks_df = amp.locate_peaks(reward_samples, save=True)
+            peak_df = amp.locate_peaks(reward_samples, subj_id,
+            session_n, reward_code, save=True)
 
-            figures = []
+            mean_df = amp.find_mean(reward_samples, subj_id,
+            session_n, reward_code, save=True)
 
-            for trial_epoch in peaks_df.trial_epoch.unique():
-                epoch_samples = peaks_df.loc[peaks_df.trial_epoch == trial_epoch]
-                fig_name, fig = amp.plot_extrema(epoch_samples, subj_id,
-                 session_n, reward_code, id_str=str(trial_epoch))
-                figures.append(fig)
-
-            super_fig_name = ('tepr' +  '_sub-' + str(subj_id) + '_sess-' +
-            str(session_n) +  '_cond-' + str(reward_code) + '_trial')
-
-            amp.save_extrema(super_fig_name, figures)
 
     end_time = time.time()
 

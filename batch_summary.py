@@ -10,8 +10,11 @@ from pupil_parse.analysis_utils import summarize_amplitude as amp
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import os
 
-
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['font.family'] = 'DejaVu Sans'
 
 def main():
 
@@ -22,16 +25,11 @@ def main():
     (unique_subjects, unique_sessions, unique_reward_codes) = md.extract_subjects_sessions(raw_data_path,
      reward_task=1)
 
-    stim_offset = 2000
-    stim_onset = 500
+
+    start_time = time.time()
 
     for subj_id in unique_subjects:
         for session_n in unique_sessions:
-
-            start_time = time.time()
-
-            print('extracting amplitudes for subject {}'.format(subj_id) +
-            ' session {}'.format(session_n))
 
             _, _, reward_code = ep.find_data_files(subj_id=subj_id,
             session_n=session_n, reward_task=1, lum_task=0,
@@ -45,20 +43,25 @@ def main():
             reward_events = ep.read_hdf5('events', subj_id, session_n,
             processed_data_path, reward_code=reward_code, id_str='zscored')
 
-
             if (np.isnan(reward_samples.z_pupil_diameter).sum() == 0) != 1:
                 print('This session has no data.')
+                continue
+
+            peaks_df = amp.locate_peaks(reward_samples,  subj_id,
+            session_n, reward_code, save=True)
 
             figures = []
 
-            amp.calc_peaks(reward_samples)
+            for trial_epoch in peaks_df.trial_epoch.unique():
+                epoch_samples = peaks_df.loc[peaks_df.trial_epoch == trial_epoch]
+                fig_name, fig = amp.plot_extrema(epoch_samples, subj_id,
+                 session_n, reward_code, id_str=str(trial_epoch))
+                figures.append(fig)
 
-            fig_name, fig = amp.plot_extrema(epoch_samples, subj_id,
-             session_n, reward_code)
+            super_fig_name = ('tepr' +  '_sub-' + str(subj_id) + '_sess-' +
+            str(session_n) +  '_cond-' + str(reward_code) + '_trial')
 
-            figures.append(fig)
-
-            amp.save_extrema(fig_name,figures)
+            amp.save_extrema(super_fig_name, figures)
 
     end_time = time.time()
 

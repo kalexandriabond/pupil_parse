@@ -19,6 +19,10 @@ def main():
 
     start_time = time.time()
 
+
+    print('extracting amplitudes for subject {}'.format(subj_id) +
+    ' session {}'.format(session_n))
+
     for subj_id in unique_subjects:
         for session_n in unique_sessions:
 

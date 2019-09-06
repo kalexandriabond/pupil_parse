@@ -10,7 +10,7 @@ import os
 import numpy as np
 
 (raw_data_path, intermediate_data_path,
-processed_data_path, figure_path) = cf.path_config()
+processed_data_path, figure_path, simulated_data_path) = cf.path_config()
 
 cf.plot_config()
 

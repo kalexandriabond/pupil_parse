@@ -12,6 +12,8 @@ trial_end=1500, latency=2000):
     interval_onsets = messages.relative_stim_onset_time - baseline_interval
     interval_offsets = messages.relative_stim_onset_time + outcome_interval
 
+    # remove first and last trial because there's no baseline interval before trial 0
+    # and no post-trial interval on trial n 
     interval_onsets, interval_offsets = interval_onsets[1:-1], interval_offsets[1:-1]
 
     assert (interval_onsets < interval_offsets).sum() == len(interval_onsets), 'window onset is not < window offset time. check data.'

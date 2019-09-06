@@ -7,7 +7,7 @@ from collections import Counter
 from pupil_parse.preprocess_utils import config as cf
 
 (raw_data_path, intermediate_data_path,
-_, _) = cf.path_config()
+_, _, _) = cf.path_config()
 
 def extract_subjects_sessions(raw_data_path, reward_task=0, lum_task=0,
 session_max=9, session_min=1, n_subjects=4):
