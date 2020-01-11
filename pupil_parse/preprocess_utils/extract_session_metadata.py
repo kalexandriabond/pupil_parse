@@ -10,7 +10,7 @@ from pupil_parse.preprocess_utils import config as cf
 _, _, _) = cf.path_config()
 
 def extract_subjects_sessions(raw_data_path, reward_task=0, lum_task=0,
-session_max=9, session_min=1, n_subjects=4):
+session_max=9, session_min=1, n_subjects=4, n_runs=None):
     """Find the metadata for each session."""
 
     if reward_task:
@@ -27,14 +27,15 @@ session_max=9, session_min=1, n_subjects=4):
     subj_data_file_list = glob(raw_data_path + 'sub-*' +
      '/' + 'ses-*' + '/' + 'pupil' + '/' +
     'sub-*' + '_' + 'ses-*' +
-    '_task-' + task_str + '.EDF')
+    '_task-' + task_str + '*.EDF')
 
     subj_data_files = [os.path.basename(file) for file in subj_data_file_list]
 
     assert subj_data_files, 'Subject data file not found. Check input.'
 
-    subjects = [int(re.search('sub-\d{3}', file).group(0)[-3:]) for file in subj_data_files]
-    sessions = [int(re.search('ses-\d{1}', file).group(0)[-1]) for file in subj_data_files]
+    subjects = [int(re.search('sub-\d{4}', file).group(0)[-3:]) for file in subj_data_files]
+    # sessions = [int(re.search('ses-\d{1}', file).group(0)[-1]) for file in subj_data_files] # this doesnt work with new format
+    sessions = [int(re.search('ses-\d{2}', file).group(0)[-2:]) for file in subj_data_files]
 
     print('number of sessions per subject: ', Counter(subjects),
     '\nnumber of session instances: ', Counter(sessions))
@@ -42,9 +43,14 @@ session_max=9, session_min=1, n_subjects=4):
     unique_subjects = np.unique(subjects)
     unique_sessions = np.unique(sessions)
 
+    print('unique_subjects ', unique_subjects)
+    print('unique_sessions ', unique_sessions)
+
     assert len(unique_subjects) == n_subjects, 'check number of subjects'
-    assert len(unique_sessions) == session_max, 'check number of sessions'
+    assert len(unique_subjects) == n_subjects, 'check number of subjects'
+    assert len(unique_sessions) == ((session_max+1) - session_min), 'check number of sessions'
     assert all(session_min <= session <= session_max for session in sessions), 'check session numbers'
+
 
     if reward_task:
         reward_codes = [re.search('\d{4}', file).group(0) for file in subj_data_files]

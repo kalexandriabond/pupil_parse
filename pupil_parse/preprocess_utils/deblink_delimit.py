@@ -1,5 +1,4 @@
 from pupil_parse.preprocess_utils import config as cf
-from pupil_parse.preprocess_utils import bandpass_filter as bp
 
 from scipy.signal import find_peaks
 import numpy as np
@@ -25,51 +24,55 @@ def deblink(samples, events):
 
     print('proportion of data invalid due to blinks: ', prop_invalid_data)
 
-    return samples
+    return samples, prop_invalid_data
 
 
-def outlier_removal(samples):
-    """Calculate the min and max pupil size as defined by 2 sd criterion.
+def outlier_removal(samples, sd=3, plot=False):
+    """Calculate the min and max pupil size as defined by 3 sd criterion.
     Replace outliers with nans."""
 
-    min_pupil = samples.pupil_diameter.mean() - 2*samples.pupil_diameter.std()
-    max_pupil = samples.pupil_diameter.mean() + 2*samples.pupil_diameter.std()
+    min_pupil = samples.pupil_diameter.mean() - sd*samples.pupil_diameter.std()
+    max_pupil = samples.pupil_diameter.mean() + sd*samples.pupil_diameter.std()
 
     samples.loc[samples.pupil_diameter <= min_pupil, 'pupil_diameter']  = np.nan
     samples.loc[samples.pupil_diameter >= max_pupil, 'pupil_diameter']  = np.nan
 
-    plt.figure()
-    sns.scatterplot(x=samples.relative_time, y=samples.pupil_diameter,
-     data=samples, estimator=None, s=1)
+    if plot:
+        plt.figure()
+        sns.scatterplot(x=samples.relative_time, y=samples.pupil_diameter,
+         data=samples, estimator=None, s=1)
 
     prop_invalid_data = np.round(samples.pupil_diameter.isna().sum() / len(samples), 2)
 
     print('proportion of data rendered outlying: ', prop_invalid_data)
 
 
-    return samples
+    return samples, prop_invalid_data
 
 
-def interpolate(samples, method='cubic'):
+def interpolate(samples, method='linear', plot=False):
     """Interpolate the samples."""
 
     samples['pupil_diameter_interp'] = samples.pupil_diameter.interpolate(method=method)
 
-    f, axes = plt.subplots(1, 2)
+    if plot:
+        f, axes = plt.subplots(1, 2)
 
-    sns.scatterplot(x=samples.relative_time[:10000], y=samples.pupil_diameter[:10000],
-     data=samples, estimator=None, ax=axes[0], s=1)
-    sns.scatterplot(x=samples.relative_time[:10000], y=samples.pupil_diameter_interp[:10000],
-    data=samples, estimator=None, ax=axes[1], s=1)
+        sns.scatterplot(x=samples.relative_time[:10000], y=samples.pupil_diameter[:10000],
+         data=samples, estimator=None, ax=axes[0], s=1)
+        sns.scatterplot(x=samples.relative_time[:10000], y=samples.pupil_diameter_interp[:10000],
+        data=samples, estimator=None, ax=axes[1], s=1)
 
-    plt.tight_layout()
+        plt.tight_layout()
 
     samples['pupil_diameter'] = samples.pupil_diameter_interp
     samples.drop(columns='pupil_diameter_interp', inplace=True)
 
-    prop_interp_data = 1 - np.round(samples.pupil_diameter.isna().sum() / len(samples), 2)
+    prop_interp_data = 1 - (samples.pupil_diameter.isna().sum() / len(samples))
+    n_failed_interp_data = samples.pupil_diameter.isna().sum()
 
     print('proportion of data successfully interpolated: ', prop_interp_data)
+    print('n datapoints left uninterpolated: ', n_failed_interp_data)
 
 
-    return samples
+    return samples, prop_interp_data, n_failed_interp_data

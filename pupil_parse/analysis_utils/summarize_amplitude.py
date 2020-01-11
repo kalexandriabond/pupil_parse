@@ -43,7 +43,7 @@ def calc_peaks(samples, width=100):
 
 def locate_peaks(samples,  subj_id, session_n, reward_code,
 stim_offset=2000, stim_onset=500,
-df=None, n_trials=398, save=None, processed_data_path=processed_data_path):
+df=None, n_trials=398, save=None, method='linear', processed_data_path=processed_data_path):
 
     trial_samples_df = samples.loc[(samples.trial_sample >= stim_onset) &
     (samples.trial_sample < stim_offset)]
@@ -60,7 +60,10 @@ df=None, n_trials=398, save=None, processed_data_path=processed_data_path):
         for trial in sparse_peak_df.peak_samples:
             peak_samples_clean.append(trial[-1])
 
-        sparse_peak_df['peak_samples'] = peak_samples_clean
+
+        sparse_peak_df['peak_amplitude'] = peak_samples_clean
+        sparse_peak_df['peak_amplitude_interp'] = sparse_peak_df.peak_amplitude.interpolate(method=method)
+        sparse_peak_df.drop(columns=['peak_samples'], inplace=True)
 
         assert len(sparse_peak_df) == n_trials, 'check len of sparse_peak_df'
 

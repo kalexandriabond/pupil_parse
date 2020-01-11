@@ -1,11 +1,12 @@
 import pandas as pd
-from pyedfread import edf # note that this package will not work on linux. need macosx.
+from pyedfread import edf
 from glob import glob
 import re
 import os
+import numpy as np
 
 def find_data_files(subj_id, raw_data_path, session_n,
-reward_task=0, lum_task=0):
+reward_task=0, lum_task=0, n_runs=None):
     """Find the data file for the session."""
 
     if reward_task:
@@ -17,19 +18,32 @@ reward_task=0, lum_task=0):
         the reinforcement learning task or the luminance range task.\
         See the arguments for this function.')
 
+    subj_id = '{:04d}'.format(subj_id)
+    session_n = '{:02d}'.format(session_n)
+
     subj_data_file_list = glob(raw_data_path + 'sub-' +
     str(subj_id) + '/' + 'ses-' + str(session_n) + '/' + 'pupil' + '/' +
     'sub-' + str(subj_id) + '_' + 'ses-' + str(session_n) +
-    '_task-' + task_str + '.EDF')
+    '_task-' + task_str + '*.EDF')
 
-    subj_data_file_raw = ''.join(subj_data_file_list) # convert list to raw str
-    subj_data_file = os.path.basename(subj_data_file_raw)
+    print('subj data file list ', subj_data_file_list)
+    print('len subj data file list ', len(subj_data_file_list))
+
+    if n_runs:
+        subj_data_file_raw = [''.join(subj_file) for subj_file in subj_data_file_list] # convert list to raw str
+        subj_data_file = [os.path.basename(subj_file) for subj_file in subj_data_file_raw]
+
+        if len(subj_data_file_list) != n_runs:
+            print('number of runs is aberrant. n_runs = ', len(subj_data_file_list))
+    else:
+        subj_data_file_raw = ''.join(subj_data_file_list)
+        subj_data_file = os.path.basename(subj_data_file_raw)
 
     assert subj_data_file, 'Subject data file not found. Check input.'
 
     if reward_task:
 
-        reward_code = re.search('\d{4}', subj_data_file).group(0)
+        reward_code = np.unique([re.search('task-\d{4}', subj_file).group(0)[-4:] for subj_file in subj_data_file_list])
 
         assert reward_code, 'Reward code not found. Check input.'
 
@@ -68,6 +82,8 @@ def clean_df(samples, events, messages, lum_task=0, reward_task=0):
     "gx_left": "gaze_x", "gy_left": "gaze_y",
      "gxvel_left": "gaze_vel_x", "gyvel_left": "gaze_vel_y"},
     errors='raise')
+
+    print(samples.gaze_x, samples.gaze_y)
 
     events=events.rename(columns={"end": "raw_end_time", "start": "raw_start_time"},
      errors='raise')
@@ -119,18 +135,30 @@ def define_relative_time(samples, events, messages):
 
 def save_hdf5(samples, events, messages,
 subj_id, session_n, intermediate_data_path,
-reward_code=None, id_str=None):
+reward_code=None, id_str=None, run_n=None):
     """Save the samples, events, and messages pd.DataFrames within an HDF5 file
     for quick storage and loading."""
+
+    session_n = '{:02d}'.format(session_n)
+    reward_code = reward_code[0]
+    run_n = '{0}'.format(run_n)
+
+    subj_id = '{:04d}'.format(subj_id)
+
 
     if reward_code:
         task_str = reward_code
     else:
         task_str = 'lum'
 
-    file_id = os.path.join(intermediate_data_path + 'sub-' +
-    str(subj_id) + '_ses-' + str(session_n) + '_task-' +
-    task_str)
+    if run_n:
+        file_id = os.path.join(intermediate_data_path + 'sub-' +
+        str(subj_id) + '_ses-' + str(session_n) + '_task-' +
+        str(task_str) + '_run-' + str(run_n))
+    else:
+        file_id = os.path.join(intermediate_data_path + 'sub-' +
+        str(subj_id) + '_ses-' + str(session_n) + '_task-' +
+        str(task_str))
 
     if id_str:
         file_id = os.path.join(file_id + '_' + id_str)
@@ -146,17 +174,29 @@ reward_code=None, id_str=None):
 
 
 def read_hdf5(data_key, subj_id, session_n,
-intermediate_data_path, reward_code=None, id_str=None):
+intermediate_data_path, reward_code=None, id_str=None, run_n=None):
     """Test hdf5 conversion and read hdf5 files."""
+
+
+    session_n = '{:02d}'.format(session_n)
+    reward_code = reward_code[0]
+    run_n = '{0}'.format(run_n)
+
+    subj_id = '{:04d}'.format(subj_id)
 
     if reward_code:
         task_str = reward_code
     else:
         task_str = 'lum'
 
-    file_id = os.path.join(intermediate_data_path + 'sub-' +
-    str(subj_id) + '_ses-' + str(session_n) + '_task-' +
-    task_str)
+    if run_n:
+        file_id = os.path.join(intermediate_data_path + 'sub-' +
+        str(subj_id) + '_ses-' + str(session_n) + '_task-' +
+        str(task_str) + '_run-' + str(run_n))
+    else:
+        file_id = os.path.join(intermediate_data_path + 'sub-' +
+        str(subj_id) + '_ses-' + str(session_n) + '_task-' +
+        str(task_str))
 
     if id_str:
         file_id = os.path.join(file_id + '_' + id_str)

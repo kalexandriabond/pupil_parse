@@ -19,12 +19,49 @@ def visualize(x,y, subj_id, session_n, reward_code,
 stimulus_onset=500, trial_end=2000, interval_end=4000,
  id_str=None, estimator=np.mean):
     """ Visualize the trial-averaged task-evoked pupillary response. """
+    from jupyterthemes import jtplot
+    plt.rcParams['pdf.fonttype'] = 42
+    plt.rcParams['font.family'] = 'Calibri'
+
 
     fig_name = ('tepr' +  '_sub-' + str(subj_id) + '_sess-' +
      str(session_n) +  '_cond-' + str(reward_code))
 
     if id_str:
         fig_name = fig_name + '_' + id_str
+
+    jtplot.style(context='poster', fscale=2, spines=False, theme='grade3')
+
+    sns.set_context('poster', font_scale=2)
+    sns.set_color_codes("muted")
+
+    fig = plt.figure()
+    sns.lineplot(x, y,
+    estimator=estimator)
+    plt.axvline(x=stimulus_onset, linestyle='dashed', color='k')
+    # plt.axvline(x=trial_end, linestyle='dashed', color='k')
+    plt.xlabel('time from stimulus onset (ms)'); plt.ylabel('pupil diameter (a.u.)')
+    # plt.title(fig_name)
+    plt.xticks(np.arange(0,
+     interval_end+stimulus_onset, stimulus_onset), np.arange(-1*stimulus_onset,
+    interval_end, stimulus_onset))
+    plt.xlim([0, trial_end])
+
+    # plt.ylim([3000, 10000])
+
+    return fig, fig_name
+
+def visualize_conditional_evoked(samples, subj_id, session_n, reward_code,
+stimulus_onset=500, trial_end=2000, interval_end=4000,
+ id_str=None, estimator=np.mean):
+    """ Visualize the trial-averaged task-evoked pupillary response. """
+
+    fig_name = ('tepr' +  '_sub-' + str(subj_id) + '_sess-' +
+     str(session_n) +  '_cond-' + str(reward_code))
+
+    if id_str:
+        fig_name = fig_name + '_' + id_str
+
 
     fig = plt.figure()
     sns.lineplot(x, y,
@@ -41,7 +78,6 @@ stimulus_onset=500, trial_end=2000, interval_end=4000,
     # plt.ylim([3000, 10000])
 
     return fig, fig_name
-
 
 def indicate_blinks(samples, events, subj_id, session_n, reward_code):
     """ Flag the blink intervals within the samples dataframe. """
@@ -64,7 +100,8 @@ def indicate_blinks(samples, events, subj_id, session_n, reward_code):
 
     return samples
 
-def raster_plot(samples, subj_id, session_n, reward_code, n_trial_samples, id_str=None,
+def raster_plot(samples, subj_id, session_n, reward_code,
+ n_trial_samples=None, id_str=None,
     stimulus_onset=500, trial_end=2000, interval_end=4000):
     fig_name = ('tepr' +  '_sub-' + str(subj_id) + '_sess-' +
      str(session_n) +  '_cond-' + str(reward_code) + '_random_raster')
@@ -72,8 +109,10 @@ def raster_plot(samples, subj_id, session_n, reward_code, n_trial_samples, id_st
     if id_str:
         fig_name = fig_name + '_' + id_str
 
-    n_trials = samples.trial_epoch.nunique()
-    sampled_trials = np.random.choice(np.arange(n_trials), n_trial_samples)
+    # n_trials = samples.trial_epoch.nunique()
+    # sampled_trials = np.random.choice(np.arange(n_trials), n_trial_samples)
+
+    sampled_trials = np.arange(len(samples))
 
     plt.figure(1)
     fig, ax = plt.subplots(n_trial_samples,
@@ -94,6 +133,39 @@ def raster_plot(samples, subj_id, session_n, reward_code, n_trial_samples, id_st
 
     return fig, fig_name
 
+
+def evoked_response_heatmap(samples, subj_id, session_n, reward_code,
+ n_trial_samples, id_str=None,
+    stimulus_onset=500, trial_end=2000, interval_end=2000):
+
+    fig_name = ('tepr' +  '_sub-' + str(subj_id) + '_sess-' +
+     str(session_n) +  '_cond-' + str(reward_code) + '_evoked_map')
+
+    if id_str:
+        fig_name = fig_name + '_' + id_str
+
+    samples = samples.loc[(samples.trial_epoch <= n_trial_samples) &
+    (samples.trial_sample > stimulus_onset) & (samples.trial_sample < trial_end)]
+    samples_sparse = samples[['trial_sample', 'trial_epoch',
+    'z_pupil_diameter']]
+
+    samples_pivot = samples_sparse.pivot(index='trial_epoch',
+    columns='trial_sample', values='z_pupil_diameter')
+
+    samples_pivot.head()
+
+    # n_trials = samples.trial_epoch.nunique()
+    # sampled_trials = np.random.choice(np.arange(n_trials), n_trial_samples)
+
+    # sampled_trials = np.arange(n_trial_samples)
+
+    plt.figure(1)
+    fig, ax = plt.subplots(figsize=(10,10))         # Sample figsize in inches
+    sns.heatmap(samples_pivot, fmt="g", cmap='viridis',
+    cbar_kws={'label': 'pupil diameter'}, robust=True, vmin=0, vmax=2)
+    plt.title(fig_name)
+
+    return fig, fig_name
 
 def save(fig, fig_name, figure_path=figure_path):
     """ Save the trial-averaged task-evoked pupillary response plot. """
