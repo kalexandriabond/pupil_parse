@@ -130,6 +130,14 @@ pupil_metric_fig_path=os.path.join(os.path.expanduser('~'),
 
     return abs_pca_comps, n_components, n_features
 
+def calc_loadings(pca_obj, feature_df, subj_id, reward_code,
+pupil_metric_fig_path=os.path.join(os.path.expanduser('~'),
+'Dropbox/loki_0.5/figures/pupil_pca/')):
+    """Calculate the loadings for each principal component."""
+
+    loadings = pca_obj.components_.T * np.sqrt(pca_obj.explained_variance_) # loadings = V {eigenvector} * sqrt(E) {eigenvalue}
+
+    return loadings
 
 def pc_df(abs_pca_components):
     pc = [abs_pca_components[session][component] for session in range(len(abs_pca_components))]
