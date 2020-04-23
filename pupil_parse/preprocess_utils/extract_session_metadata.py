@@ -33,9 +33,9 @@ session_max=9, session_min=1, n_subjects=4, n_runs=None):
 
     assert subj_data_files, 'Subject data file not found. Check input.'
 
-    subjects = [int(re.search('sub-\d{4}', file).group(0)[-3:]) for file in subj_data_files]
+    subjects = [int(re.search('sub-\d{3}', file).group(0)[-3:]) for file in subj_data_files]
     # sessions = [int(re.search('ses-\d{1}', file).group(0)[-1]) for file in subj_data_files] # this doesnt work with new format
-    sessions = [int(re.search('ses-\d{2}', file).group(0)[-2:]) for file in subj_data_files]
+    sessions = [int(re.search('ses-\d{1}', file).group(0)[-1:]) for file in subj_data_files]
 
     print('number of sessions per subject: ', Counter(subjects),
     '\nnumber of session instances: ', Counter(sessions))
