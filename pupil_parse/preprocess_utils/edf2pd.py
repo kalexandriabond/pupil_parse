@@ -18,8 +18,8 @@ reward_task=0, lum_task=0, n_runs=None):
         the reinforcement learning task or the luminance range task.\
         See the arguments for this function.')
 
-    subj_id = '{:04d}'.format(subj_id)
-    session_n = '{:02d}'.format(session_n)
+    subj_id = '{:03d}'.format(subj_id)
+    session_n = '{:01d}'.format(session_n)
 
     subj_data_file_list = glob(raw_data_path + 'sub-' +
     str(subj_id) + '/' + 'ses-' + str(session_n) + '/' + 'pupil' + '/' +
@@ -178,11 +178,10 @@ intermediate_data_path, reward_code=None, id_str=None, run_n=None):
     """Test hdf5 conversion and read hdf5 files."""
 
 
-    session_n = '{:02d}'.format(session_n)
+    session_n = '{:01d}'.format(session_n)
     reward_code = reward_code[0]
-    run_n = '{0}'.format(run_n)
 
-    subj_id = '{:04d}'.format(subj_id)
+    subj_id = '{:03d}'.format(subj_id)
 
     if reward_code:
         task_str = reward_code
@@ -190,6 +189,7 @@ intermediate_data_path, reward_code=None, id_str=None, run_n=None):
         task_str = 'lum'
 
     if run_n:
+        run_n = '{0}'.format(run_n)
         file_id = os.path.join(intermediate_data_path + 'sub-' +
         str(subj_id) + '_ses-' + str(session_n) + '_task-' +
         str(task_str) + '_run-' + str(run_n))
